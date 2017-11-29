@@ -1,7 +1,7 @@
 #!/bin/sh
 
-REMOTEMNT="/mnt/dbbak"
-BACKUPDIR="/mnt/innobackup"
+REMOTEMNT="/some/remote/path maybe NFS mount?"
+BACKUPDIR="/some/local/backup/path"
 BACKUPLIST="${BACKUPDIR}/innobackup.list"
 BACKUP_TUNNING=" --compress --parallel=8 --use-memory=2G "
 DATEDIR="$(date +%Y-%m-%d_%H-%M-%S)"
@@ -41,6 +41,19 @@ echo "Last LSN backup: $LASTLSN"
 tar cpjf base-${DATEDIR}.tar.bz2 base-${DATEDIR}/;
 rm -rf base-${DATEDIR};
 
+# If you are on real machine or qemu/vbox,
+# and can perform an nfs mount, then
+#if ! df $REMOTEMNT | grep "${REMOTEMNT}" | grep -q nfs 2>/dev/null; then
+#  echo "${REMOTEMNT} is not mounted"
+#  exit 1
+#fi
+
+# Small hack to get nfs mount status if you are on
+# lxc container and cannot mount nfs directly.
+# You can do this on lxc host before starting container:
+#   mount -t nfs some-remote:/path /some/mount/path
+#   touch /some/mount/path/.locknfs
+# Don't forget to add mount bind /some/mount/path to your container
 if [ ! -f ${REMOTEMNT}/.locknfs ]; then
   echo "${REMOTEMNT} is not mounted"
   exit 1
@@ -50,7 +63,7 @@ if [ -r backup.old ]; then
   for x in $(cat backup.old); do
     YEAR=$(echo $x | sed 's/base-//g' | cut -d - -f 1);
     MONTH=$(echo $x | sed 's/base-//g' | cut -d - -f 2);
-    REMOTEDIR="${REMOTEMNT}/backup-${YEAR}/bulan-${MONTH}";
+    REMOTEDIR="${REMOTEMNT}/backup-${YEAR}/${MONTH}";
     if [ ! -d "${REMOTEDIR}" ]; then
       mkdir -p ${REMOTEDIR}
     fi
