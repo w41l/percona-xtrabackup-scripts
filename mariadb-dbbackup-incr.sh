@@ -1,8 +1,9 @@
 #!/bin/sh
 
-BACKUPDIR="/mnt/innobackup"
+BACKUPDIR="/some/local/backup/path"
 DATEDIR=$(date +%F_%H-%M-%S)
 BACKUPLIST="${BACKUPDIR}/innobackup.list"
+# You can disable any of this tunning to preserve some resource (cpu/ram)
 BACKUP_TUNNING=" --compress --parallel=8 --use-memory=2G "
 OLDLSN="$(cat ${BACKUPDIR}/last.lsn)"
 
